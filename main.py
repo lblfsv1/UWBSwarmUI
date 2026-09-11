@@ -10,7 +10,7 @@ pygame.init()
 # =========================================================
 
 
-#ser = serial.Serial("/dev/ttyACM0", baudrate=115200, timeout=0.1)
+ser = serial.Serial("/dev/ttyACM0", baudrate=115200, timeout=0.1)
 
 
 # =========================================================
@@ -814,23 +814,23 @@ while running:
     # Serial Communication
     #-----------------------------------------------------
 
-    # if ser.in_waiting > 0:
+    if ser.in_waiting > 0:
 
-    #     line = ser.readline().decode("utf-8").strip()
+        line = ser.readline().decode("utf-8").strip()
 
-    #     data = line.split(",")
+        data = line.split(",")
 
-    #     if len(data) == 1:
+        if len(data) == 1:
 
-    #         MY_HEADING = float(data[0])
+            MY_HEADING = float(data[0])
 
-    #     if len(data) == 3:
+        if len(data) == 3:
 
-    #         vehicle = get_vehicle(data[0])
+            vehicle = get_vehicle(data[0])
 
-    #         vehicle["distance"] = float(data[1])
+            vehicle["distance"] = float(data[1])
 
-    #         vehicle["heading"] = float(data[2])
+            vehicle["heading"] = float(data[2])
 
 
     for event in pygame.event.get():
