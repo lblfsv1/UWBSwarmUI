@@ -1,18 +1,28 @@
 import pygame
 from datetime import datetime
+import serial
 
 pygame.init()
+
+
+# =========================================================
+# Serial Communication Configuration
+# =========================================================
+
+
+#ser = serial.Serial("/dev/ttyACM0", baudrate=115200, timeout=0.1)
 
 
 # =========================================================
 # 画面設定
 # =========================================================
 
-WIDTH = 1000
-HEIGHT = 600
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Forklift Swarm Monitor")
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+pygame.display.set_caption("UWB Swarm System Monitor")
+pygame.mouse.set_visible(False)
+
+WIDTH, HEIGHT = screen.get_size()
 
 clock = pygame.time.Clock()
 
@@ -103,15 +113,15 @@ vehicles = [
 
 car_images = {
     "A": pygame.image.load(
-        "assets/car_green.png"
+        "assets/red_forklift.jpg"
     ).convert_alpha(),
 
     "B": pygame.image.load(
-        "assets/car_pink.png"
+        "assets/blue_forklift.jpg"
     ).convert_alpha(),
 
     "C": pygame.image.load(
-        "assets/car_black.png"
+        "assets/yellow_forklift.jpg"
     ).convert_alpha()
 }
 
@@ -799,6 +809,29 @@ running = True
 
 
 while running:
+
+    #-----------------------------------------------------
+    # Serial Communication
+    #-----------------------------------------------------
+
+    # if ser.in_waiting > 0:
+
+    #     line = ser.readline().decode("utf-8").strip()
+
+    #     data = line.split(",")
+
+    #     if len(data) == 1:
+
+    #         MY_HEADING = float(data[0])
+
+    #     if len(data) == 3:
+
+    #         vehicle = get_vehicle(data[0])
+
+    #         vehicle["distance"] = float(data[1])
+
+    #         vehicle["heading"] = float(data[2])
+
 
     for event in pygame.event.get():
 
