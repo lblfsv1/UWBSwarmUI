@@ -9,7 +9,7 @@ pygame.init()
 # =========================================================
 
 
-ser = serial.Serial("/dev/ttyACM0", baudrate=115200, timeout=0.1)
+ser = serial.Serial("/dev/serial0", baudrate=115200, timeout=0.1)
 
 # =========================================================
 # 画面設定
