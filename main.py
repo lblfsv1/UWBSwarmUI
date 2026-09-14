@@ -4,14 +4,12 @@ import serial
 
 pygame.init()
 
-
 # =========================================================
 # Serial Communication Configuration
 # =========================================================
 
 
 ser = serial.Serial("/dev/ttyACM0", baudrate=115200, timeout=0.1)
-
 
 # =========================================================
 # 画面設定
@@ -471,35 +469,35 @@ def draw_radar():
     # -----------------------------------------
     # 基準距離リング
     # -----------------------------------------
-
-    base_distances = [
-        (5, RED),
-        (10, YELLOW),
-        (15, GREEN)
-    ]
-
-    for distance, color in base_distances:
-
-        radius = distance_to_pixel(
-            distance
-        )
-
-        pygame.draw.circle(
-            screen,
-            color,
-            RADAR_CENTER,
-            radius,
-            1
-        )
-
-        draw_text(
-            f"{distance} m",
-            font_tiny,
-            color,
-            cx + 5,
-            cy - radius + 3
-        )
-
+#
+#    base_distances = [
+#        (5, RED),
+#        (10, YELLOW),
+#        (15, GREEN)
+#    ]
+#
+#    for distance, color in base_distances:
+#
+#        radius = distance_to_pixel(
+#            distance
+#        )
+#
+#        pygame.draw.circle(
+#            screen,
+#            color,
+#            RADAR_CENTER,
+#            radius,
+#            1
+#        )
+#
+#        draw_text(
+#            f"{distance} m",
+#            font_tiny,
+#            color,
+#            cx + 5,
+#            cy - radius + 3
+#        )
+#
 
     # -----------------------------------------
     # 各vehicleまでの距離円
@@ -801,6 +799,13 @@ def draw_warning():
     )
 
 
+#=========================================================
+# Send the "START" signal to ESP32 to start the communication
+#=========================================================
+
+ser.reset_input_buffer()
+ser.write(b"START\n")
+
 # =========================================================
 # メインループ
 # =========================================================
@@ -810,10 +815,11 @@ running = True
 
 while running:
 
+
+    
     #-----------------------------------------------------
     # Serial Communication
     #-----------------------------------------------------
-
     if ser.in_waiting > 0:
 
         line = ser.readline().decode("utf-8").strip()
