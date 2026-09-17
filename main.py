@@ -2,19 +2,22 @@ import pygame
 from datetime import datetime
 import serial
 
+
 pygame.init()
 
 # =========================================================
 # Serial Communication Configuration
 # =========================================================
 
-
-ser = serial.Serial("/dev/serial0", baudrate=115200, timeout=0.1)
+ser = serial.Serial(
+    "/dev/ttyACM0",
+    baudrate=115200,
+    timeout=0.05
+)
 
 # =========================================================
 # 画面設定
 # =========================================================
-
 
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("UWB Swarm System Monitor")
@@ -92,16 +95,16 @@ vehicles = [
         "distance": 12.5,
         "heading": 80.0
     },
-    {
-        "id": "B",
-        "distance": 8.1,
-        "heading": 200.0
-    },
-    {
-        "id": "C",
-        "distance": 4.2,
-        "heading": 310.0
-    }
+#    {
+#        "id": "B",
+#        "distance": 8.1,
+#        "heading": 200.0
+#    },
+#    {
+#        "id": "C",
+#        "distance": 4.2,
+#        "heading": 310.0
+#    }
 ]
 
 
@@ -111,16 +114,16 @@ vehicles = [
 
 car_images = {
     "A": pygame.image.load(
-        "assets/red_forklift.jpg"
-    ).convert_alpha(),
+        "assets/redforklift2.jpg"
+     ).convert_alpha(),
 
-    "B": pygame.image.load(
-        "assets/blue_forklift.jpg"
-    ).convert_alpha(),
+     "B": pygame.image.load(
+        "assets/blueforklift2.jpg"
+     ).convert_alpha(),
 
-    "C": pygame.image.load(
-        "assets/yellow_forklift.jpg"
-    ).convert_alpha()
+     "C": pygame.image.load(
+         "assets/yellowforklift2.jpg"
+     ).convert_alpha()
 }
 
 
@@ -149,11 +152,42 @@ def remove_white_background(image):
     return image
 
 
+# =========================================================
+# 画像前処理
+# ここで一度だけ縮小
+# =========================================================
+
 for key in car_images:
 
     car_images[key] = remove_white_background(
         car_images[key]
     )
+
+    car_images[key] = pygame.transform.scale(
+        car_images[key],
+        (42, 70)
+    )
+
+
+# =========================================================
+# 回転画像を事前生成
+# 5度刻み
+# =========================================================
+
+rotated_car_images = {}
+
+for vehicle_id, image in car_images.items():
+
+    rotated_car_images[vehicle_id] = {}
+
+    for angle in range(0, 360, 5):
+
+        rotated_car_images[vehicle_id][angle] = (
+            pygame.transform.rotate(
+                image,
+                -angle
+            )
+        )
 
 
 # =========================================================
@@ -357,21 +391,21 @@ def draw_grid():
 # =========================================================
 
 def draw_car_image(
-    image,
+    vehicle_id,
     center,
-    angle,
-    size=(45, 75)
+    angle
 ):
 
-    image = pygame.transform.smoothscale(
-        image,
-        size
+    # 5度単位に丸める
+    display_angle = int(
+        round(angle / 5.0) * 5
     )
 
-    rotated = pygame.transform.rotate(
-        image,
-        -angle
-    )
+    display_angle %= 360
+
+    rotated = rotated_car_images[
+        vehicle_id
+    ][display_angle]
 
     rect = rotated.get_rect(
         center=center
@@ -465,44 +499,7 @@ def draw_radar():
         1
     )
 
-
-    # -----------------------------------------
-    # 基準距離リング
-    # -----------------------------------------
-#
-#    base_distances = [
-#        (5, RED),
-#        (10, YELLOW),
-#        (15, GREEN)
-#    ]
-#
-#    for distance, color in base_distances:
-#
-#        radius = distance_to_pixel(
-#            distance
-#        )
-#
-#        pygame.draw.circle(
-#            screen,
-#            color,
-#            RADAR_CENTER,
-#            radius,
-#            1
-#        )
-#
-#        draw_text(
-#            f"{distance} m",
-#            font_tiny,
-#            color,
-#            cx + 5,
-#            cy - radius + 3
-#        )
-#
-
-    # -----------------------------------------
     # 各vehicleまでの距離円
-    # -----------------------------------------
-
     for vehicle in vehicles:
 
         status = get_status(
@@ -544,11 +541,7 @@ def draw_radar():
             label_y
         )
 
-
-    # -----------------------------------------
     # YOU
-    # -----------------------------------------
-
     pygame.draw.circle(
         screen,
         GREEN,
@@ -587,12 +580,7 @@ def draw_vehicle_list():
 
     y = 110
 
-
     for vehicle in vehicles:
-
-        # -----------------------------------------
-        # 自動危険判定
-        # -----------------------------------------
 
         status = get_status(
             vehicle["distance"]
@@ -602,11 +590,6 @@ def draw_vehicle_list():
             status
         )
 
-
-        # -----------------------------------------
-        # 相対Heading
-        # -----------------------------------------
-
         relative = relative_heading(
             MY_HEADING,
             vehicle["heading"]
@@ -615,11 +598,6 @@ def draw_vehicle_list():
         direction = relative_direction(
             relative
         )
-
-
-        # -----------------------------------------
-        # パネル
-        # -----------------------------------------
 
         rect = pygame.Rect(
             x,
@@ -633,11 +611,6 @@ def draw_vehicle_list():
             color
         )
 
-
-        # -----------------------------------------
-        # Vehicle ID
-        # -----------------------------------------
-
         draw_text(
             f'VEHICLE {vehicle["id"]}',
             font_mid,
@@ -645,11 +618,6 @@ def draw_vehicle_list():
             x + 12,
             y + 10
         )
-
-
-        # -----------------------------------------
-        # Status
-        # -----------------------------------------
 
         draw_text(
             status,
@@ -659,11 +627,6 @@ def draw_vehicle_list():
             y + 13
         )
 
-
-        # -----------------------------------------
-        # Distance
-        # -----------------------------------------
-
         draw_text(
             f'Distance: {vehicle["distance"]:.1f} m',
             font_small,
@@ -671,11 +634,6 @@ def draw_vehicle_list():
             x + 12,
             y + 42
         )
-
-
-        # -----------------------------------------
-        # Relative Heading
-        # -----------------------------------------
 
         draw_text(
             f'Relative: {relative:+.0f} deg',
@@ -685,11 +643,6 @@ def draw_vehicle_list():
             y + 65
         )
 
-
-        # -----------------------------------------
-        # Relative direction
-        # -----------------------------------------
-
         draw_text(
             direction,
             font_tiny,
@@ -698,17 +651,8 @@ def draw_vehicle_list():
             y + 85
         )
 
-
-        # -----------------------------------------
-        # 車両画像
-        # -----------------------------------------
-
-        car_image = car_images[
-            vehicle["id"]
-        ]
-
         draw_car_image(
-            car_image,
+            vehicle["id"],
             (
                 x
                 + panel_width
@@ -717,10 +661,8 @@ def draw_vehicle_list():
                 y
                 + 55
             ),
-            relative,
-            size=(42, 70)
+            relative
         )
-
 
         y += 115
 
@@ -745,17 +687,13 @@ def draw_warning():
                 vehicle
             )
 
-
     if len(dangerous_vehicles) == 0:
         return
 
-
-    # 一番近いvehicleを選ぶ
     dangerous_vehicle = min(
         dangerous_vehicles,
         key=lambda v: v["distance"]
     )
-
 
     x = RIGHT_X + 12
 
@@ -771,7 +709,6 @@ def draw_warning():
         RED
     )
 
-
     draw_text(
         "!! COLLISION RISK",
         font_mid,
@@ -780,7 +717,6 @@ def draw_warning():
         478
     )
 
-
     draw_text(
         f'VEHICLE {dangerous_vehicle["id"]}',
         font_small,
@@ -788,7 +724,6 @@ def draw_warning():
         x + 12,
         515
     )
-
 
     draw_text(
         f'Distance: {dangerous_vehicle["distance"]:.1f} m',
@@ -799,12 +734,19 @@ def draw_warning():
     )
 
 
-#=========================================================
-# Send the "START" signal to ESP32 to start the communication
-#=========================================================
+# =========================================================
+# UARTバッファをクリア
+# =========================================================
 
 ser.reset_input_buffer()
+
+
+# =========================================================
+# ESP32へSTART送信
+# =========================================================
+
 ser.write(b"START\n")
+
 
 # =========================================================
 # メインループ
@@ -815,29 +757,71 @@ running = True
 
 while running:
 
-
-    
-    #-----------------------------------------------------
+    # =====================================================
     # Serial Communication
-    #-----------------------------------------------------
-    if ser.in_waiting > 0:
+    # =====================================================
 
-        line = ser.readline().decode("utf-8").strip()
+    # 一度の描画ループで
+    # UARTデータを大量処理しすぎないようにする
+    serial_count = 0
 
-        data = line.split(",")
+    while ser.in_waiting > 0 and serial_count < 10:
 
-        if len(data) == 1:
+        try:
+            line = (
+                ser.readline()
+                .decode(
+                    "utf-8"
+                )
+                .strip()
+            )
 
-            MY_HEADING = float(data[0])
+            if line:
 
-        if len(data) == 3:
+                data = line.split(",")
 
-            vehicle = get_vehicle(data[0])
+                # 自車Headingのみ
+                if len(data) == 1:
 
-            vehicle["distance"] = float(data[1])
+                    try:
+                        MY_HEADING = float(
+                            data[0]
+                        )
 
-            vehicle["heading"] = float(data[2])
+                    except ValueError:
+                        pass
 
+
+                # vehicle情報
+                if len(data) == 3:
+
+                    vehicle = get_vehicle(
+                        data[0]
+                    )
+
+                    if vehicle is not None:
+
+                        try:
+                            vehicle["distance"] = float(
+                                data[1]
+                            )
+
+                            vehicle["heading"] = float(
+                                data[2]
+                            )
+
+                        except ValueError:
+                            pass
+
+        except Exception:
+            pass
+
+        serial_count += 1
+
+
+    # =====================================================
+    # イベント
+    # =====================================================
 
     for event in pygame.event.get():
 
@@ -848,42 +832,27 @@ while running:
 
         if event.type == pygame.KEYDOWN:
 
-
-            # -----------------------------------------
             # ESC
-            # -----------------------------------------
-
             if event.key == pygame.K_ESCAPE:
 
                 running = False
 
 
-            # -----------------------------------------
-            # ← 自車Headingを左へ
-            # -----------------------------------------
-
+            # ← 自車Heading
             elif event.key == pygame.K_LEFT:
 
                 MY_HEADING -= 10
-
                 MY_HEADING %= 360
 
 
-            # -----------------------------------------
-            # → 自車Headingを右へ
-            # -----------------------------------------
-
+            # → 自車Heading
             elif event.key == pygame.K_RIGHT:
 
                 MY_HEADING += 10
-
                 MY_HEADING %= 360
 
 
-            # -----------------------------------------
             # ↑ Vehicle Cを近づける
-            # -----------------------------------------
-
             elif event.key == pygame.K_UP:
 
                 vehicle_c = get_vehicle("C")
@@ -897,10 +866,7 @@ while running:
                         vehicle_c["distance"] = 0.5
 
 
-            # -----------------------------------------
             # ↓ Vehicle Cを遠ざける
-            # -----------------------------------------
-
             elif event.key == pygame.K_DOWN:
 
                 vehicle_c = get_vehicle("C")
@@ -935,9 +901,18 @@ while running:
 
     pygame.display.flip()
 
-    clock.tick(
-        30
-    )
 
+    # =====================================================
+    # FPS制限
+    # =====================================================
+
+    clock.tick(30)
+
+
+# =========================================================
+# 終了
+# =========================================================
+
+ser.close()
 
 pygame.quit()
