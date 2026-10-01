@@ -9,11 +9,11 @@ pygame.init()
 # Serial Communication Configuration
 # =========================================================
 
-ser = serial.Serial(
-    "/dev/ttyACM0",
-    baudrate=115200,
-    timeout=0.05
-)
+# ser = serial.Serial(
+#     "/dev/ttyACM0",
+#     baudrate=115200,
+#     timeout=0.05
+# )
 
 # =========================================================
 # 画面設定
@@ -90,21 +90,26 @@ MY_HEADING = 30.0
 # =========================================================
 
 vehicles = [
-    {
-        "id": "A",
-        "distance": 12.5,
-        "heading": 80.0
-    },
+     {
+        "id":"0",
+        "distance": 0.0,
+        "heading": 0.0
+     },
+#    {
+#       "id": "A",
+#        "distance": 12.5,
+#        "heading": 80.0
+#    },
 #    {
 #        "id": "B",
 #        "distance": 8.1,
 #        "heading": 200.0
 #    },
-#    {
-#        "id": "C",
-#        "distance": 4.2,
-#        "heading": 310.0
-#    }
+    {
+        "id": "C",
+        "distance": 4.2,
+        "heading": 310.0
+    }
 ]
 
 
@@ -113,6 +118,11 @@ vehicles = [
 # =========================================================
 
 car_images = {
+
+    "0": pygame.image.load(
+    "assets/green_forklift.jpg"
+    ).convert_alpha(),
+
     "A": pygame.image.load(
         "assets/redforklift2.jpg"
      ).convert_alpha(),
@@ -358,7 +368,7 @@ def draw_grid():
     step = 40
 
     for x in range(
-        0,
+        15,
         LEFT_WIDTH,
         step
     ):
@@ -372,7 +382,7 @@ def draw_grid():
         )
 
     for y in range(
-        70,
+        65,
         HEIGHT,
         step
     ):
@@ -502,6 +512,9 @@ def draw_radar():
     # 各vehicleまでの距離円
     for vehicle in vehicles:
 
+        if vehicle["id"] == "0":
+            continue
+
         status = get_status(
             vehicle["distance"]
         )
@@ -541,20 +554,30 @@ def draw_radar():
             label_y
         )
 
+        draw_text(
+            f"{vehicle["distance"]:.1f} m",
+            font_mid,
+            color,
+            label_x + 35,
+            label_y
+        )
+
     # YOU
-    pygame.draw.circle(
-        screen,
-        GREEN,
-        RADAR_CENTER,
-        5
-    )
+    # pygame.draw.circle(
+    #     screen,
+    #     GREEN,
+    #     RADAR_CENTER,
+    #     5
+    # )
+
+    draw_car_image("0", RADAR_CENTER, 0)
 
     draw_text(
         "YOU",
         font_mid,
         WHITE,
-        cx - 23,
-        cy + 15
+        cx - 17,
+        cy + 40
     )
 
 
@@ -581,6 +604,9 @@ def draw_vehicle_list():
     y = 110
 
     for vehicle in vehicles:
+
+        if vehicle["id"] == "0":
+            continue
 
         status = get_status(
             vehicle["distance"]
@@ -738,14 +764,14 @@ def draw_warning():
 # UARTバッファをクリア
 # =========================================================
 
-ser.reset_input_buffer()
+#ser.reset_input_buffer()
 
 
 # =========================================================
 # ESP32へSTART送信
 # =========================================================
 
-ser.write(b"START\n")
+#ser.write(b"START\n")
 
 
 # =========================================================
@@ -765,58 +791,58 @@ while running:
     # UARTデータを大量処理しすぎないようにする
     serial_count = 0
 
-    while ser.in_waiting > 0 and serial_count < 10:
+    # while ser.in_waiting > 0 and serial_count < 10:
 
-        try:
-            line = (
-                ser.readline()
-                .decode(
-                    "utf-8"
-                )
-                .strip()
-            )
+    #     try:
+    #         line = (
+    #             ser.readline()
+    #             .decode(
+    #                 "utf-8"
+    #             )
+    #             .strip()
+    #         )
 
-            if line:
+    #         if line:
 
-                data = line.split(",")
+    #             data = line.split(",")
 
-                # 自車Headingのみ
-                if len(data) == 1:
+    #             # 自車Headingのみ
+    #             if len(data) == 1:
 
-                    try:
-                        MY_HEADING = float(
-                            data[0]
-                        )
+    #                 try:
+    #                     MY_HEADING = float(
+    #                         data[0]
+    #                     )
 
-                    except ValueError:
-                        pass
+    #                 except ValueError:
+    #                     pass
 
 
-                # vehicle情報
-                if len(data) == 3:
+    #             # vehicle情報
+    #             if len(data) == 3:
 
-                    vehicle = get_vehicle(
-                        data[0]
-                    )
+    #                 vehicle = get_vehicle(
+    #                     data[0]
+    #                 )
 
-                    if vehicle is not None:
+    #                 if vehicle is not None:
 
-                        try:
-                            vehicle["distance"] = float(
-                                data[1]
-                            )
+    #                     try:
+    #                         vehicle["distance"] = float(
+    #                             data[1]
+    #                         )
 
-                            vehicle["heading"] = float(
-                                data[2]
-                            )
+    #                         vehicle["heading"] = float(
+    #                             data[2]
+    #                         )
 
-                        except ValueError:
-                            pass
+    #                     except ValueError:
+    #                         pass
 
-        except Exception:
-            pass
+    #     except Exception:
+    #         pass
 
-        serial_count += 1
+    #     serial_count += 1
 
 
     # =====================================================
@@ -913,6 +939,6 @@ while running:
 # 終了
 # =========================================================
 
-ser.close()
+#ser.close()
 
 pygame.quit()
